@@ -304,12 +304,6 @@ function toggleModal(show) {
 }
 
 document.getElementById('close-modal').addEventListener('click', () => toggleModal(false));
-document.getElementById('login-form').addEventListener('submit', (e) => {
-    e.preventDefault();
-    const user = document.getElementById('username').value;
-    // Accept any username to login for prototype
-    loginUser(user);
-});
 
 // --- 3. RENDERING ENGINE ---
 const renderNav = () => {
