@@ -256,6 +256,21 @@ function loginUser(username) {
     router(); // Re-render current page
 }
 
+// Google OAuth Handler
+window.handleGoogleLogin = function(response) {
+    // Google returns a JWT token. We must decode the middle chunk (payload) to get the user data.
+    const token = response.credential;
+    const base64Url = token.split('.')[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+    }).join(''));
+    
+    const userObject = JSON.parse(jsonPayload);
+    // userObject contains .given_name, .email, .picture, etc.
+    loginUser(userObject.given_name); // Log them in using their real Google first name
+};
+
 function logoutUser() {
     localStorage.removeItem('cc_username');
     if (window.location.hash.includes('lesson')) {
@@ -475,4 +490,25 @@ function router() {
 }
 
 window.addEventListener('hashchange', router);
-window.addEventListener('DOMContentLoaded', router);
+window.addEventListener('hashchange', router);
+
+window.addEventListener('DOMContentLoaded', () => {
+    router();
+    
+    // Initialize Google SSO
+    if (window.google) {
+        google.accounts.id.initialize({
+            // VERY IMPORTANT: Replace this ID with your real OAuth Client ID from Google Cloud Console
+            client_id: "YOUR_GOOGLE_CLIENT_ID_HERE",
+            callback: handleGoogleLogin,
+            context: "signin",
+            ux_mode: "popup"
+        });
+        
+        // Render the Google Sign-in button inside our container
+        google.accounts.id.renderButton(
+            document.getElementById("google-btn-container"),
+            { theme: "outline", size: "large", type: "standard", shape: "pill", width: 300 }
+        );
+    }
+});
